@@ -1,14 +1,16 @@
-To-Do App (Mini Project)
+# To-Do App (Mini-Projekt)
 
-Features:
-- Add / delete tasks
-- Mark tasks as done
-- Search/filter
-- LocalStorage persistence
+Funktionen:
+- Aufgaben hinzufügen und löschen
+- Aufgaben als erledigt markieren
+- Suche/Filter
+- Priorität (High/Medium/Low)
+- Speicherung im Browser (LocalStorage)
 
-Tech: HTML, CSS, JavaScript
+Technik:
+- HTML, CSS, JavaScript
 
-What I learned:
-- DOM manipulation (create elements, events)
-- LocalStorage (save/load data)
-- Simple filtering/search
+Gelernt:
+- DOM-Manipulation und Events
+- LocalStorage (Speichern/Laden)
+- Sortierung nach Priorität
