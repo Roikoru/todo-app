@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>To-Do App</title>
+  <style>
+    body { font-family: system-ui, Arial; max-width: 720px; margin: 40px auto; padding: 0 16px; }
+    h1 { margin: 0 0 12px; }
+    .row { display: flex; gap: 8px; }
+    input, button { padding: 10px; font-size: 16px; }
+    input { flex: 1; }
+    ul { list-style: none; padding: 0; }
+    li { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 10px; margin: 8px 0; }
+    li.done { opacity: 0.6; text-decoration: line-through; }
+    .spacer { flex: 1; }
+    .pill { font-size: 12px; padding: 4px 8px; border-radius: 999px; border: 1px solid #ddd; }
+  </style>
+</head>
+<body>
+  <h1>To-Do App</h1>
+  <p class="pill">Speichert automatisch (LocalStorage)</p>
+
+  <div class="row">
+    <input id="taskInput" placeholder="Neue Aufgabe..." />
+    <button id="addBtn">Hinzufügen</button>
+  </div>
+
+  <div class="row" style="margin-top:10px;">
+    <input id="searchInput" placeholder="Suchen..." />
+    <button id="clearBtn" title="Alle Aufgaben löschen">Alles löschen</button>
+  </div>
+
+  <ul id="list"></ul>
+
+  <script>
+    const KEY = "todo_items_v1";
+    const taskInput = document.getElementById("taskInput");
+    const searchInput = document.getElementById("searchInput");
+    const list = document.getElementById("list");
+
+    function loadItems() {
+      try { return JSON.parse(localStorage.getItem(KEY)) ?? []; }
+      catch { return []; }
+    }
+    function saveItems(items) {
+      localStorage.setItem(KEY, JSON.stringify(items));
+    }
+
+    let items = loadItems();
+
+    function render() {
+      const q = searchInput.value.trim().toLowerCase();
+      list.innerHTML = "";
+
+      items
+        .filter(it => it.text.toLowerCase().includes(q))
+        .forEach((it) => {
+          const li = document.createElement("li");
+          li.className = it.done ? "done" : "";
+
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.checked = it.done;
+          cb.addEventListener("change", () => {
+            it.done = cb.checked;
+            saveItems(items);
+            render();
+          });
+
+          const span = document.createElement("span");
+          span.textContent = it.text;
+
+          const spacer = document.createElement("div");
+          spacer.className = "spacer";
+
+          const del = document.createElement("button");
+          del.textContent = "Löschen";
+          del.addEventListener("click", () => {
+            items = items.filter(x => x.id !== it.id);
+            saveItems(items);
+            render();
+          });
+
+          li.append(cb, span, spacer, del);
+          list.appendChild(li);
+        });
+    }
+
+    function addItem() {
+      const text = taskInput.value.trim();
+      if (!text) return;
+
+      items.unshift({ id: crypto.randomUUID(), text, done: false });
+      taskInput.value = "";
+      saveItems(items);
+      render();
+    }
+
+    document.getElementById("addBtn").addEventListener("click", addItem);
+    taskInput.addEventListener("keydown", (e) => { if (e.key === "Enter") addItem(); });
+
+    searchInput.addEventListener("input", render);
+
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      if (!confirm("Wirklich alle Aufgaben löschen?")) return;
+      items = [];
+      saveItems(items);
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
