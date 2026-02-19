@@ -9,6 +9,7 @@
     h1 { margin: 0 0 12px; }
     .row { display: flex; gap: 8px; }
     input, button { padding: 10px; font-size: 16px; }
+    select { padding: 10px; font-size: 16px; }
     input { flex: 1; }
     ul { list-style: none; padding: 0; }
     li { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 10px; margin: 8px 0; }
@@ -21,15 +22,24 @@
   <h1>To-Do App</h1>
   <p class="pill">Speichert automatisch (LocalStorage)</p>
 
-  <div class="row">
-    <input id="taskInput" placeholder="Neue Aufgabe..." />
-    <button id="addBtn">Hinzufügen</button>
-  </div>
+ <div class="row">
+  <input id="taskInput" placeholder="Neue Aufgabe..." />
+  <select id="prioSelect">
+    <option value="High">High</option>
+    <option value="Medium" selected>Medium</option>
+    <option value="Low">Low</option>
+  </select>
+  <button id="addBtn">Hinzufügen</button>
+</div>
 
-  <div class="row" style="margin-top:10px;">
-    <input id="searchInput" placeholder="Suchen..." />
-    <button id="clearBtn" title="Alle Aufgaben löschen">Alles löschen</button>
-  </div>
+<div class="row" style="margin-top:10px;">
+  <input id="searchInput" placeholder="Suchen..." />
+  <label class="pill" style="display:flex;align-items:center;gap:8px;">
+    <input type="checkbox" id="hideDone" />
+    Erledigte ausblenden
+  </label>
+  <button id="clearBtn" title="Alle Aufgaben löschen">Alles löschen</button>
+</div>
 
   <ul id="list"></ul>
 
@@ -38,6 +48,8 @@
     const taskInput = document.getElementById("taskInput");
     const searchInput = document.getElementById("searchInput");
     const list = document.getElementById("list");
+    const hideDone = document.getElementById("hideDone");
+    const prioSelect = document.getElementById("prioSelect");
 
     function loadItems() {
       try { return JSON.parse(localStorage.getItem(KEY)) ?? []; }
@@ -50,11 +62,15 @@
     let items = loadItems();
 
     function render() {
+      const prioRank = (p) => (p === "High" ? 0 : p === "Medium" ? 1 : 2);
       const q = searchInput.value.trim().toLowerCase();
+      const hide = hideDone.checked;
       list.innerHTML = "";
 
       items
-        .filter(it => it.text.toLowerCase().includes(q))
+        .slice()
+        .filter(it => it.text.toLowerCase().includes(q) && (!hide || !it.done))
+        .sort((a, b) => prioRank(a.prio ?? "Medium") - prioRank(b.prio ?? "Medium"))
         .forEach((it) => {
           const li = document.createElement("li");
           li.className = it.done ? "done" : "";
@@ -70,6 +86,9 @@
 
           const span = document.createElement("span");
           span.textContent = it.text;
+          const pr = document.createElement("span");
+          pr.className = "pill";
+          pr.textContent = it.prio ?? "Medium";
 
           const spacer = document.createElement("div");
           spacer.className = "spacer";
@@ -82,7 +101,7 @@
             render();
           });
 
-          li.append(cb, span, spacer, del);
+          li.append(cb, pr, span, spacer, del);
           list.appendChild(li);
         });
     }
@@ -91,7 +110,7 @@
       const text = taskInput.value.trim();
       if (!text) return;
 
-      items.unshift({ id: crypto.randomUUID(), text, done: false });
+      items.unshift({ id: crypto.randomUUID(), text, done: false, prio: prioSelect.value });
       taskInput.value = "";
       saveItems(items);
       render();
@@ -101,6 +120,7 @@
     taskInput.addEventListener("keydown", (e) => { if (e.key === "Enter") addItem(); });
 
     searchInput.addEventListener("input", render);
+    hideDone.addEventListener("change", render);
 
     document.getElementById("clearBtn").addEventListener("click", () => {
       if (!confirm("Wirklich alle Aufgaben löschen?")) return;
